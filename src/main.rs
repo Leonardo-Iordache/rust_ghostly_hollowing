@@ -12,7 +12,6 @@
 use std::ffi::{c_void, OsStr};
 use std::os::windows::ffi::OsStrExt;
 use std::ptr::null_mut;
-use winapi::um::winnt::WCHAR;
 use windows_sys::core::PWSTR;
 use windows_sys::Win32::Foundation::{HMODULE, MAX_PATH};
 use windows_sys::Win32::Storage::FileSystem::{GetTempFileNameW, GetTempPathW};

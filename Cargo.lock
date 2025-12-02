@@ -768,6 +768,7 @@ version = "0.1.0"
 dependencies = [
  "ccommon_fn",
  "memoffset",
+ "ntapi",
  "reqwest",
  "rust_syscalls",
  "winapi",

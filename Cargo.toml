@@ -32,6 +32,7 @@ windows-sys = { version = "0.61.2", features = [
     "Win32_System_Kernel"
 ]}
 winapi = { version = "0.3.9", features = ["winnt"]}
+ntapi = { version = "0.4.1" }
 rust_syscalls = { path = "./rust_syscalls/", features = ["_INDIRECT_"] }
 reqwest = {  version = "0.12.24", features = ["blocking"] }
 ccommon_fn = { git = "https://github.com/Leonardo-Iordache/ccommon_fn.git", branch = "master"}
